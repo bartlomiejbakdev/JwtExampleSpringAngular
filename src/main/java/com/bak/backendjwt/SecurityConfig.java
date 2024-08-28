@@ -18,21 +18,24 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
 
     private final UserRepo userRepo;
+    private JwtTokenFilter jwtTokenFilter;
 
-    public SecurityConfig(UserRepo userRepo) {
+    public SecurityConfig(UserRepo userRepo, JwtTokenFilter jwtTokenFilter) {
         this.userRepo = userRepo;
+        this.jwtTokenFilter = jwtTokenFilter;
     }
 
 
     //To Refactor
     @EventListener(ApplicationReadyEvent.class)
     public void saveUser(){
-        User user = new User("bartek@gmail.com", getBcryptPasswordEncoder().encode("admin"));
+        User user = new User("bartek@gmail.com", getBcryptPasswordEncoder().encode("admin"), "ROLE_ADMIN");
         userRepo.save(user);
     }
 
@@ -64,6 +67,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/login").permitAll()
                         .anyRequest().authenticated()
                 )
+                .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class) // pewnosc ze filter sie wywola
                 .exceptionHandling(exceptionHandling ->
                         exceptionHandling
                                 .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
