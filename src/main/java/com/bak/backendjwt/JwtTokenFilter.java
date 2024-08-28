@@ -9,6 +9,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.GrantedAuthoritiesContainer;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -16,6 +18,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 public class JwtTokenFilter extends OncePerRequestFilter {
@@ -37,13 +42,9 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         JWTVerifier verifier = JWT.require(algorithm)
                 .build();
         DecodedJWT jwt = verifier.verify(token.substring(7));
-        Boolean isAdmin = jwt.getClaim("isAdmin").asBoolean();
-        String role = "ROLE_USER";
-        if (isAdmin) {
-            role = "ROLE_ADMIN";
-        }
+        String[] roles = jwt.getClaim("roles").asArray(String.class);
+        List<SimpleGrantedAuthority> collect = Stream.of(roles).map(SimpleGrantedAuthority::new).collect(Collectors.toList());
 
-        SimpleGrantedAuthority simpleGrantedAuthority = new SimpleGrantedAuthority(role);
-        return new UsernamePasswordAuthenticationToken(jwt.getSubject(), null, Collections.singleton(simpleGrantedAuthority));
+        return new UsernamePasswordAuthenticationToken(jwt.getSubject(), null, collect);
     }
 }

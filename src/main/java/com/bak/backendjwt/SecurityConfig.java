@@ -35,8 +35,10 @@ public class SecurityConfig {
     //To Refactor
     @EventListener(ApplicationReadyEvent.class)
     public void saveUser(){
-        User user = new User("bartek@gmail.com", getBcryptPasswordEncoder().encode("admin"), "ROLE_ADMIN");
-        userRepo.save(user);
+        User user1 = new User("bartek@gmail.com", getBcryptPasswordEncoder().encode("admin"), "ROLE_ADMIN");
+        userRepo.save(user1);
+        User user2 = new User("paulina@gmail.com", getBcryptPasswordEncoder().encode("admin"), "ROLE_USER");
+        userRepo.save(user2);
     }
 
     @Bean
@@ -65,6 +67,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/auth/login").permitAll()
+                        .requestMatchers("/hello").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class) // pewnosc ze filter sie wywola

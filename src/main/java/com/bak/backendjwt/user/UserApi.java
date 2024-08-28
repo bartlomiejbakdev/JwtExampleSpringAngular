@@ -37,7 +37,7 @@ public class UserApi {
             String token = JWT.create()
                     .withSubject(user.getUsername()) //użytkownik, dla kogo jest JWT
                     .withIssuer("Eminem")
-                    .withClaim("isAdmin", true)
+                    .withClaim("roles", user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()))
                     .sign(algorithm);
 
             AuthResponse authResponse = new AuthResponse(user.getUsername(), token);
